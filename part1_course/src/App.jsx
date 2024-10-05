@@ -1,27 +1,24 @@
 import { useState } from "react"
 const App = () => {
-  const [left,setLeft] = useState(0)
-  const [right,setRight] = useState(0)
-  const [AllClicks,setAll] = useState([])  
-  const [total,Settotal] = useState(0)
-  const handleLeft = () => {
-    setAll(AllClicks.concat('L'))
-    setLeft(left+1)
-    Settotal(total+1)
+  const [value, setValue] = useState(10)
+
+  const setToValue = (newValue) => {
+    console.log('value now', newValue)
+    setValue(newValue)
   }
-  const handleRight = () =>{
-    setAll(AllClicks.concat('R'))
-    setRight(right+1)
-    Settotal(total+1)
-  }
+
   return (
     <div>
-      {left}
-      <button onClick={handleLeft}>left</button>
-      <button onClick={handleRight}>right</button>
-      {right}
-      <p>{AllClicks.join(' ')}</p>
-      <p>{total}</p>
+      {value}
+      <button onClick={() => setToValue(1000)}>
+        thousand
+      </button>
+      <button onClick={() => setToValue(0)}>
+        reset
+      </button>
+      <button onClick={() => setToValue(value + 1)}>
+        increment
+      </button>
     </div>
   )
 }
