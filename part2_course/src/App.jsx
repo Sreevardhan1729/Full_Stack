@@ -1,31 +1,69 @@
-import { useState } from 'react'
+import { useState,useEffect } from 'react'
 import Note from './components/Note'
-
+import noteService from "./services/notes"
+import Notification from "./components/notification"
+const Footer = () =>{
+  const footerStyle = {
+    color:'green',
+    fontStyle:'italic',
+    fontSize:16
+  }
+  return (
+    <div style={footerStyle}>
+      <br />
+      <em>Note app, Department of Computer Science, University of Massachusetts</em>
+    </div>
+  )
+}
 const App = (props) => {
-  const [notes,setNotes] = useState(props.notes)
+  const [notes,setNotes] = useState([])
   const [newNote,setNewNote] = useState("Try entering something")
   const [showAll,setShowAll] = useState(true)
+  const [errorMessage,setErrorMessage] = useState(null)
   const notesToShow = showAll ? notes: notes.filter(note => note.important === true)
+  useEffect(()=>{
+    noteService
+      .getAll().then(inititalNotes =>{
+        setNotes(inititalNotes)
+      })
+  },[])
+  const toggleInprtantof = (id)=>{
+    const note = notes.find(n => n.id === id)
+    const changedNote = { ...note, important: !note.important }
+    noteService
+      .update(id, changedNote)
+      .then(updateNote => {
+        setNotes(notes.map(note => note.id === id ? updateNote : note))
+      })
+      .catch(error =>{
+        setErrorMessage(`Note ${note.content} was alredy removed from the server`)
+        setTimeout(()=>{
+          setErrorMessage(null)
+        },5000)
+        setNotes(notes.filter(n=> n.id!== id))
+      })
+  }
   const handleNoteChange = (event) =>{
-    console.log(event.target.value)
     setNewNote(event.target.value)
   }
-  const addNote = (event) => {
+  const addNote = (event) =>{
     event.preventDefault()
-    if(newNote.length==0){
-      return;
-    }
+    const id = (notes.length +1).toString()
     const newObject = {
-      content:newNote,
+      id: id,
+      content: newNote,
       important: Math.random()<0.5,
-      id: String(notes.length + 1),
     }
-    setNotes(notes.concat(newObject))
-    setNewNote('')
+    noteService
+      .create(newObject).then(createNote =>{
+        setNotes(notes.concat(createNote))
+        setNewNote('')
+      })
   }
   return (
     <div>
       <h1>Notes</h1>
+      <Notification message = {errorMessage} />
       <div>
         <button onClick={() => setShowAll(!showAll)} >
           show {showAll ? 'important' : 'all'}
@@ -33,13 +71,14 @@ const App = (props) => {
       </div>
       <ul>
         {notesToShow.map(note => 
-          <Note key={note.id} note={note} />
+          <Note key={note.id} note={note} toggleImportance={()=>toggleInprtantof(note.id)} />
         )}
       </ul>
       <form onSubmit={addNote}>
         <input value={newNote} onChange={handleNoteChange}/>
         <button type='submit'>Save</button>
       </form>
+      <Footer />
     </div>
   )
 }
